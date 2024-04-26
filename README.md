@@ -1,46 +1,55 @@
-# MonkeyDev
-
-A modified version of iOSOpenDev
-
-* easy to install
-* support the latest version of theos
-* support CaptainHook Tweak、Logos Tweak、Command-line Tool
-* support insert dylib、class-dump、restore-symbol、reveal、cycript，patch and debug iOS Apps, without jailbreak.
-
-Plese Read Wiki: [Wiki](https://github.com/AloneMonkey/MonkeyDev/wiki)
+# MonkeyDev支持无根越狱打包
 
 
 
-
-
-原有iOSOpenDev的升级，非越狱插件开发集成神器！
-
-* 可以使用Xcode开发CaptainHook Tweak、Logos Tweak 和 Command-line Tool，在越狱机器开发插件，这是原来iOSOpenDev功能的迁移和改进。
-* 只需拖入一个砸壳应用，自动集成class-dump、restore-symbol、Reveal、Cycript和注入的动态库并重签名安装到非越狱机器。
-* 支持调试自己编写的动态库和第三方App
-* 支持通过CocoaPods第三方应用集成SDK以及非越狱插件，简单来说就是通过CocoaPods搭建了一个非越狱插件商店。
-
-使用请阅读Wiki文档: [Wiki](https://github.com/AloneMonkey/MonkeyDev/wiki)
-
-
-非越狱插件CocoaPods私有仓库地址:[MonkeyDevSpecs](https://github.com/AloneMonkey/MonkeyDevSpecs)
+随着 ios 15 越狱的稳定, 无根越狱的使用频率也越来越高, 而原来的MonkeyDev已多年没有更新，现在将MonkeyDev修改并支持无根越狱环境编译打包
 
 
 
-**免责声明: 软件仅供技术交流，禁止用于商业及非法用途，如产生法律纠纷与本人无关。**
+## 更新Theos
 
-<br>
+```
+# 安装最新版本的theos, 注意如果原来的theos有自行添加运行时头文件，请自行在复制到新版本的theos里面
+git clone --recursive https://github.com/theos/theos.git
+```
 
-<h2>《iOS应用逆向与安全》出版啦！！！</h2>
 
-# 购书链接
 
-#### 京东: [https://item.jd.com/12361729.html](https://item.jd.com/12361729.html)
+## 更新本仓库的MonkeyDev
 
-#### 天猫: [https://detail.tmall.com/item.htm?id=570691214072](https://detail.tmall.com/item.htm?id=570691214072)
+```
+下载最新的MonkeyDev的代码放到原来的旧MonkeyDev路径即可，注意保持路径不变
+或者
+只需要将项目 bin/md 文件替换到 本地MonkeyDev/bin目录下即可，注意可执行权限
+```
 
-#### 当当: [http://product.dangdang.com/25283164.html](http://product.dangdang.com/25283164.html)
 
-#### 亚马逊: [https://www.amazon.cn/dp/B07D5952BR/](https://www.amazon.cn/dp/B07D5952BR/)
 
-<h3>请大家多多支持正版哦~</h3>
+## 修改项目模板
+
+~/Library/Developer/Xcode/Templates/MonkeyDev/ 指向就是 MonkeyDev安装目录下的/templates
+
+```
+# 是否要使用sudo提权，根本自己MonkeyDev安装目录来来决定
+# 执行以下命令
+sudo /usr/libexec/PlistBuddy -c "Add :Targets:0:SharedSettings:MonkeyDevRootless string YES"  ~/Library/Developer/Xcode/Templates/MonkeyDev/Base.xctemplate/TemplateInfo.plist
+sudo /usr/libexec/PlistBuddy -c "Add :Targets:0:SharedSettings:CODE_SIGNING_ALLOWED string NO"  ~/Library/Developer/Xcode/Templates/MonkeyDev/Base.xctemplate/TemplateInfo.plist
+sudo /usr/libexec/PlistBuddy -c "Set :Targets:0:SharedSettings:MonkeyDevDeviceIP localhost"  ~/Library/Developer/Xcode/Templates/MonkeyDev/Base.xctemplate/TemplateInfo.plist
+sudo /usr/libexec/PlistBuddy -c "Set :Targets:0:SharedSettings:MonkeyDevDevicePassword alpine"  ~/Library/Developer/Xcode/Templates/MonkeyDev/Base.xctemplate/TemplateInfo.plist
+sudo /usr/libexec/PlistBuddy -c "Set :Targets:0:SharedSettings:MonkeyDevDevicePort 2222"  ~/Library/Developer/Xcode/Templates/MonkeyDev/Base.xctemplate/TemplateInfo.plist
+sudo /usr/libexec/PlistBuddy -c "Set :Targets:0:SharedSettings:MonkeyDevkillProcessOnInstall "  ~/Library/Developer/Xcode/Templates/MonkeyDev/Base.xctemplate/TemplateInfo.plist
+```
+
+
+
+## 编译DEB
+
+```
+根据自己的手机是否是rootless越狱设置Build Setting里的MonekDevRootless为 YES 或 NO 即可 
+```
+
+
+
+## 感谢MonkeyDev原作者的分享
+
+引用 https://github.com/AloneMonkey/MonkeyDev
