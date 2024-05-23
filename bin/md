@@ -183,7 +183,7 @@ function requireFile() # args: filePath [, touchFileIfNotFound]
 				panic $? "Failed to touch $filePath"
 				
 		else
-			panic 1 "File $filePath not found"
+			panic 1 "验证文件: $filePath not found"
 		fi
 	fi
 }
@@ -479,12 +479,14 @@ function createDebianPackage() # args: sourceDir, packageName [, outputDir]
 		# 复制要安装的目标到构建目录 
 		local lastBuildPackageDir="$PROJECT_DIR/LatestBuild/Package/"
 		local lastBuildJbDir="$lastBuildPackageDir/var/jb"
+		echo "编译目录: $lastBuildJbDir"
 
 		# 如果目录不存在则创建
 		if [ ! -d lastBuildJbDir ]; then
 			mkdir -p "$lastBuildJbDir"
 		fi
 		# 按有根或无根模式复制到编译目录下, 复制时排除DEBIAN目录
+		echo "复制文件到/var/jb目录下:"
 		rsync -av --exclude="DEBIAN" "$sourceDir/" "$lastBuildJbDir/"
 		createTarForDebianPackage "$sourceDir/DEBIAN" "$tempDir" "control" "-n"
 		createTarForDebianPackage "$lastBuildPackageDir" "$tempDir" "data" "--exclude" "DEBIAN/*" "--exclude" "DEBIAN"
