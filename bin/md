@@ -1,6 +1,9 @@
 #!/bin/bash
 
+source ~/.zshrc
+
 export setCmd="set -eo pipefail"
+export PATH=/opt/homebrew/bin:$PATH
 $setCmd
 
 export PATH=/opt/MonkeyDev/bin:$MonkeyDevTheosPath/bin:/usr/local/bin:/usr/bin:/usr/sbin:/bin:/sbin:$PATH
@@ -709,7 +712,7 @@ function Processor()
 
 # 	--xcbp-logos
 function xcodeBuildPhase_Logos() # no args
-{
+{	
 	[[ "$ACTION" == "build" ]] || \
 		panic 1 "For Xcode Build Phase use only, Not support Archive, Please use LatestBuild/createIPA.command to generate ipa."
 	
@@ -740,6 +743,7 @@ function xcodeBuildPhase_Logos() # no args
 	# for each *.xm project file, use Logos Processor to generate *.mm file
 
 	# 修改arch
+	echo "修改arc指令集"
 	requireExportedVariable "MonkeyDevRootless"
     if [[ $MonkeyDevRootless == "YES" ]]; then
     	# 删除属性
@@ -793,6 +797,7 @@ function xcodeBuildPhase() # no args
 	local stripBin
 	local stripOption
 	local packageFileName
+	local controlPath="$PROJECT_DIR/$PROJECT_NAME/Package/DEBIAN/control"
 
 	echo "安装目录: $packageInstallPath"
 	
@@ -825,14 +830,42 @@ function xcodeBuildPhase() # no args
 
 	#添加无根越狱的支持
 	requireExportedVariable "MonkeyDevRootless"
+
+	# 修改arch
+	echo "修改arc指令集"
+    if [[ $MonkeyDevRootless == "YES" ]]; then
+    	# 删除属性
+    	while grep -q '^Architecture:' "$controlPath"; do
+    		sed -i '' '/^Architecture:/d' "$controlPath"
+		done
+    	while grep -q '^$' "$controlPath"; do
+    		sed -i '' '/^$/d' "$controlPath"
+    	done
+    	# 添加属性
+        echo "Architecture: iphoneos-arm64" >> "$controlPath"
+    else
+    	# 删除属性
+    	while grep -q '^Architecture:' "$controlPath"; do
+    		sed -i '' '/^Architecture:/d' "$controlPath"
+		done
+    	while grep -q '^$' "$controlPath"; do
+    		sed -i '' '/^$/d' "$controlPath"
+    	done
+    	# 添加属性
+        echo "Architecture: iphoneos-arm" >> "$controlPath"
+    fi
+
 	if [[ $MonkeyDevRootless == "YES" ]]; then
 		echo "正在替换CydiaFramework依赖路径: $builtExecutable"
 		#这里将默认的/Library/Frameworks/CydiaSubstrate.framework/CydiaSubstrate路径替换为@rpath/CydiaSubstrate.framework/CydiaSubstrate
-		install_name_tool -add_rpath "/var/jb/Library/Frameworks" "$builtExecutable"
-		install_name_tool -add_rpath "/var/jb/usr/lib" "$builtExecutable"
-		install_name_tool -add_rpath "@loader_path/.jbroot/Library/Frameworks" "$builtExecutable"
-		install_name_tool -add_rpath "@loader_path/.jbroot/usr/lib" "$builtExecutable"
-		install_name_tool -change /Library/Frameworks/CydiaSubstrate.framework/CydiaSubstrate @rpath/CydiaSubstrate.framework/CydiaSubstrate "$builtExecutable"
+		# 检查是否已经存在 RPATH
+		if ! otool -l "$builtExecutable" | grep -q "$RPATH_TO_ADD"; then
+			install_name_tool -add_rpath "/var/jb/Library/Frameworks" "$builtExecutable"
+			install_name_tool -add_rpath "/var/jb/usr/lib" "$builtExecutable"
+			install_name_tool -add_rpath "@loader_path/.jbroot/Library/Frameworks" "$builtExecutable"
+			install_name_tool -add_rpath "@loader_path/.jbroot/usr/lib" "$builtExecutable"
+			install_name_tool -change /Library/Frameworks/CydiaSubstrate.framework/CydiaSubstrate @rpath/CydiaSubstrate.framework/CydiaSubstrate "$builtExecutable"
+		fi
 	fi
 
 	#如果是Profile，strip可执行文件
@@ -882,7 +915,7 @@ function xcodeBuildPhase() # no args
 	
 	fi
 
-    echo "请根据您的越狱类型设置 Build Setting -> MonkeyDevRootless 的值"
+	echo "请根据您的越狱类型设置 Build Setting -> MonkeyDevRootless 的值"
 
 	#如果是profie或者用户设置了每次build都install或package，生成deb
 	if [[ "$CONFIGURATION" == "Release" && "$VALIDATE_PRODUCT" == "YES" ]] || [[ "$MonkeyDevInstallOnAnyBuild" == "YES" ]] || [[ "$MonkeyDevBuildPackageOnAnyBuild" == "YES" ]]; then
