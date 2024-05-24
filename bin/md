@@ -745,10 +745,10 @@ function xcodeBuildPhase_Logos() # no args
 	# for each *.xm project file, use Logos Processor to generate *.mm file
 
 	# 修改arch
-	echo "修改arc指令集"
+	echo "修改arc指令集: $MonkeyDevRootless"
 	# requireExportedVariable "MonkeyDevRootless"
-	if [[ -z $MonkeyDevRootless  ]]; then
-		if [[ -d "$controlPath" ]]; then
+	if [[ -n $MonkeyDevRootless ]]; then
+		if [[ -f "$controlPath" ]]; then
 		    if [[ $MonkeyDevRootless == "YES" ]]; then
 		    	# 删除属性
 		    	while grep -q '^Architecture:' "$controlPath"; do
@@ -838,10 +838,10 @@ function xcodeBuildPhase() # no args
 	requireExportedVariable "MonkeyDevRootless"
 
 	# 修改arch
-	echo "修改arc指令集"
+	echo "修改arc指令集: $MonkeyDevRootless"
     # requireExportedVariable "MonkeyDevRootless"
-	if [[ -z $MonkeyDevRootless  ]]; then
-		if [[ -d "$controlPath" ]]; then
+	if [[ -n $MonkeyDevRootless ]]; then
+		if [[ -f "$controlPath" ]]; then
 		    if [[ $MonkeyDevRootless == "YES" ]]; then
 		    	# 删除属性
 		    	while grep -q '^Architecture:' "$controlPath"; do
@@ -870,7 +870,8 @@ function xcodeBuildPhase() # no args
 		echo "正在替换CydiaFramework依赖路径: $builtExecutable"
 		#这里将默认的/Library/Frameworks/CydiaSubstrate.framework/CydiaSubstrate路径替换为@rpath/CydiaSubstrate.framework/CydiaSubstrate
 		# 检查是否已经存在 RPATH
-		if ! otool -l "$builtExecutable" | grep -q "$RPATH_TO_ADD"; then
+		if ! otool -l "$builtExecutable" | grep -q "LC_RPATH"; then
+			echo "添加依赖库: $MonkeyDevRootless"
 			install_name_tool -add_rpath "/var/jb/Library/Frameworks" "$builtExecutable"
 			install_name_tool -add_rpath "/var/jb/usr/lib" "$builtExecutable"
 			install_name_tool -add_rpath "@loader_path/.jbroot/Library/Frameworks" "$builtExecutable"
