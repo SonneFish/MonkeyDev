@@ -746,28 +746,32 @@ function xcodeBuildPhase_Logos() # no args
 
 	# 修改arch
 	echo "修改arc指令集"
-	requireExportedVariable "MonkeyDevRootless"
-    if [[ $MonkeyDevRootless == "YES" ]]; then
-    	# 删除属性
-    	while grep -q '^Architecture:' "$controlPath"; do
-    		sed -i '' '/^Architecture:/d' "$controlPath"
-		done
-    	while grep -q '^$' "$controlPath"; do
-    		sed -i '' '/^$/d' "$controlPath"
-    	done
-    	# 添加属性
-        echo "Architecture: iphoneos-arm64" >> "$controlPath"
-    else
-    	# 删除属性
-    	while grep -q '^Architecture:' "$controlPath"; do
-    		sed -i '' '/^Architecture:/d' "$controlPath"
-		done
-    	while grep -q '^$' "$controlPath"; do
-    		sed -i '' '/^$/d' "$controlPath"
-    	done
-    	# 添加属性
-        echo "Architecture: iphoneos-arm" >> "$controlPath"
-    fi
+	# requireExportedVariable "MonkeyDevRootless"
+	if [[ -z $MonkeyDevRootless  ]]; then
+		if [[ -d "$controlPath" ]]; then
+		    if [[ $MonkeyDevRootless == "YES" ]]; then
+		    	# 删除属性
+		    	while grep -q '^Architecture:' "$controlPath"; do
+		    		sed -i '' '/^Architecture:/d' "$controlPath"
+				done
+		    	while grep -q '^$' "$controlPath"; do
+		    		sed -i '' '/^$/d' "$controlPath"
+		    	done
+		    	# 添加属性
+		        echo "Architecture: iphoneos-arm64" >> "$controlPath"
+		    else
+		    	# 删除属性
+		    	while grep -q '^Architecture:' "$controlPath"; do
+		    		sed -i '' '/^Architecture:/d' "$controlPath"
+				done
+		    	while grep -q '^$' "$controlPath"; do
+		    		sed -i '' '/^$/d' "$controlPath"
+		    	done
+		    	# 添加属性
+		        echo "Architecture: iphoneos-arm" >> "$controlPath"
+		    fi
+		fi
+	fi
 
 	Processor "$logosProcessor" "$PROJECT_DIR"
 
@@ -835,27 +839,32 @@ function xcodeBuildPhase() # no args
 
 	# 修改arch
 	echo "修改arc指令集"
-    if [[ $MonkeyDevRootless == "YES" ]]; then
-    	# 删除属性
-    	while grep -q '^Architecture:' "$controlPath"; do
-    		sed -i '' '/^Architecture:/d' "$controlPath"
-		done
-    	while grep -q '^$' "$controlPath"; do
-    		sed -i '' '/^$/d' "$controlPath"
-    	done
-    	# 添加属性
-        echo "Architecture: iphoneos-arm64" >> "$controlPath"
-    else
-    	# 删除属性
-    	while grep -q '^Architecture:' "$controlPath"; do
-    		sed -i '' '/^Architecture:/d' "$controlPath"
-		done
-    	while grep -q '^$' "$controlPath"; do
-    		sed -i '' '/^$/d' "$controlPath"
-    	done
-    	# 添加属性
-        echo "Architecture: iphoneos-arm" >> "$controlPath"
-    fi
+    # requireExportedVariable "MonkeyDevRootless"
+	if [[ -z $MonkeyDevRootless  ]]; then
+		if [[ -d "$controlPath" ]]; then
+		    if [[ $MonkeyDevRootless == "YES" ]]; then
+		    	# 删除属性
+		    	while grep -q '^Architecture:' "$controlPath"; do
+		    		sed -i '' '/^Architecture:/d' "$controlPath"
+				done
+		    	while grep -q '^$' "$controlPath"; do
+		    		sed -i '' '/^$/d' "$controlPath"
+		    	done
+		    	# 添加属性
+		        echo "Architecture: iphoneos-arm64" >> "$controlPath"
+		    else
+		    	# 删除属性
+		    	while grep -q '^Architecture:' "$controlPath"; do
+		    		sed -i '' '/^Architecture:/d' "$controlPath"
+				done
+		    	while grep -q '^$' "$controlPath"; do
+		    		sed -i '' '/^$/d' "$controlPath"
+		    	done
+		    	# 添加属性
+		        echo "Architecture: iphoneos-arm" >> "$controlPath"
+		    fi
+		fi
+	fi
 
 	if [[ $MonkeyDevRootless == "YES" ]]; then
 		echo "正在替换CydiaFramework依赖路径: $builtExecutable"
