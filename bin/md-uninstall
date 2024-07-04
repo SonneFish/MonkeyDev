@@ -110,17 +110,20 @@ for f in "${bashProfileFiles[@]}"; do
 	fi
 done
 	
-if [[ $userBashProfileFile != "" ]]; then
-	sed -i "" "s/^export MonkeyDevPath=.*$//g" "$userBashProfileFile"
-	sed -i "" "s/^export MonkeyDevDeviceIP=.*$//g" "$userBashProfileFile"
-	sed -i "" "s/^export PATH=.*${MonkeyDevPath//\//\\/}\\/bin:.*$//g" "$userBashProfileFile"
-	sed -i "" "s/^export PATH=.*\$MonkeyDevPath\\/bin:.*$//g" "$userBashProfileFile"
-fi
+# echo $userBashProfileFile
+# if [[ $userBashProfileFile != "" ]]; then
+# 	sed -i "" "s/^export MonkeyDevPath=.*$//g" "$userBashProfileFile"
+# 	sed -i "" "s/^export MonkeyDevDeviceIP=.*$//g" "$userBashProfileFile"
+# 	sed -i "" "s/^export PATH=.*${MonkeyDevPath//\//\\/}\\/bin:.*$//g" "$userBashProfileFile"
+# 	sed -i "" "s/^export PATH=.*\$MonkeyDevPath\\/bin:.*$//g" "$userBashProfileFile"
+# fi
 
-iosSdkPlatformPath=`getSdkProperty iphoneos PlatformPath`
+# iosSdkPlatformPath=`getSdkProperty iphoneos PlatformPath`
 
-specificationFile=$(cd $iosSdkPlatformPath/../../.. && pwd)/PlugIns/IDEiOSSupportCore.ideplugin/Contents/Resources/Embedded-Device.xcspec
-
+xcodeDeveloperPath=`xcode-select --print-path`
+# xcode14+ path
+specificationFile=$(cd $xcodeDeveloperPath && pwd)/Library/Xcode/Plug-ins/XCBSpecifications.ideplugin/Contents/Resources/Embedded-Device.xcspec
+echo $specificationFile
 #还原文件
 restoreFile "$specificationFile"
 

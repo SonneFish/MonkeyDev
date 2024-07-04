@@ -16,6 +16,10 @@ export scriptVer="2.0"
 export MonkeyDevPath="/opt/MonkeyDev"
 export backupFileExt=".MonkeyDev"
 
+script_dir="$(realpath "$0")"
+ClonedMonkeyDevPath=$(realpath $script_dir/../..)
+echo "ClonedMonkeyDevPath = $ClonedMonkeyDevPath"
+
 #获取用户名、用户组、用户目录、和profile文件
 export userName="${SUDO_USER-$USER}"
 export userGroup=`id -g $userName`
@@ -165,6 +169,20 @@ function downloadGithubTarball() # args: url, outputDir, title
 	cp -fR "$untardDir/"* "$outputDir/"
 }
 
+function copyDir() # args: srcDir, desDir
+{
+	local srcDir="$1"
+	local desDir="$2"
+	echo "srcDir = $srcDir, desDir = $desDir"
+
+	# exit 0
+	mkdir -p "$desDir" || \
+		panic $? "Failed to make directory: $desDir"
+
+    
+	cp -fR "$srcDir/"* "$desDir/"
+}
+
 #修改文件权限
 function changeMode()
 {
@@ -295,27 +313,34 @@ function writeDictToSpecification(){ #args: filePath, content
 	/usr/libexec/PlistBuddy -x -c "merge $tempfile 0" "$filePath" > /dev/null
 }
 
+#比较版本号，v1大于等于v2
+function versionGe() {
+        test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" == "$1"
+}
+
 # start it
 # 创建/opt/MonkeyDev
 mkdir -p "$MonkeyDevPath" || \
 	panic $? "Failed to make directory: $MonkeyDevPath"
 
-branch="master"
+# branch="master"
 
-if [[ "$1" ]]; then
-	branch="$1"
-fi
+# if [[ "$1" ]]; then
+# 	branch="$1"
+# fi
 
 #下载一些基础文件和模板文件
-downloadGithubTarball "https://codeload.github.com/AloneMonkey/MonkeyDev/tar.gz/$branch" "$MonkeyDevPath" "MonkeyDev base"
-downloadGithubTarball "https://codeload.github.com/AloneMonkey/MonkeyDev-Xcode-Templates/tar.gz/$branch" "$MonkeyDevPath/templates" "Xcode templates"
+# downloadGithubTarball "https://codeload.github.com/AloneMonkey/MonkeyDev/tar.gz/$branch" "$MonkeyDevPath" "MonkeyDev base"
+# downloadGithubTarball "https://codeload.github.com/AloneMonkey/MonkeyDev-Xcode-Templates/tar.gz/$branch" "$MonkeyDevPath/templates" "Xcode templates"
 
-#下载frida-ios-dump
-echo "Downloading frida-ios-dump from Github..."
-downloadFile "https://raw.githubusercontent.com/AloneMonkey/frida-ios-dump/3.x/dump.py" "$MonkeyDevPath/bin/dump.py"
-downloadFile "https://raw.githubusercontent.com/AloneMonkey/frida-ios-dump/3.x/dump.js" "$MonkeyDevPath/bin/dump.js"
+# #下载frida-ios-dump
+# echo "Downloading frida-ios-dump from Github..."
+# downloadFile "https://raw.githubusercontent.com/AloneMonkey/frida-ios-dump/3.x/dump.py" "$MonkeyDevPath/bin/dump.py"
+# downloadFile "https://raw.githubusercontent.com/AloneMonkey/frida-ios-dump/3.x/dump.js" "$MonkeyDevPath/bin/dump.js"
 
-chmod +x "$MonkeyDevPath/bin/dump.py"
+# chmod +x "$MonkeyDevPath/bin/dump.py"
+
+copyDir "$ClonedMonkeyDevPath" "$MonkeyDevPath" 
 
 #创建符号链接
 echo "Creating symlink to Xcode templates..."
@@ -332,7 +357,7 @@ if [[ ! -d "$userTemplatesDir" ]]; then
 		panic $? "Failed to change ownership-group of $userDevDir"
 fi
 
-ln -fhs "$MonkeyDevPath/templates" "$userTemplatesDir/MonkeyDev"
+ln -fhs "$MonkeyDevPath/Templates" "$userTemplatesDir/MonkeyDev"
 
 #修改用户profile文件
 echo "Modifying Bash personal initialization file..."
@@ -342,36 +367,67 @@ userBashProfileFile=`determineUserBashProfileFile`
 addToFileIfMissing "$userBashProfileFile" "^(export)? *MonkeyDevPath=.*" "export MonkeyDevPath=$MonkeyDevPath"
 addToFileIfMissing "$userBashProfileFile" "^(export)? *MonkeyDevDeviceIP=.*" "export MonkeyDevDeviceIP="
 addToFileIfMissing "$userBashProfileFile" "^(export)? *PATH=.*(\\\$MonkeyDevPath\\/bin|${MonkeyDevPath//\//\\/}\\/bin).*" "export PATH=$MonkeyDevPath/bin:\$PATH"
+xcodeVersion=$(xcodebuild -version)
+regex="Xcode ([0-9.]+)"
+if [[ ${xcodeVersion} =~ ${regex} ]]; then
+	versionNumber=${BASH_REMATCH[1]}
+	echo "Current xcode vsrsion ${versionNumber}"
+	# 如果当前xcode版本大于等于14.0
+	if versionGe ${versionNumber} "14.0"; then
+		echo "This version of xcode does not require modification of the .xcspec file"
+		echo "Done"
+		exit 0
+	else
+		#支持iphoneos command line tools
+		iosSdkPlatformPath=$(getSdkProperty iphoneos PlatformPath)
+		macosSdkPlatformPath=$(getSdkProperty macosx PlatformPath)
 
-#支持iphoneos command line tools
-iosSdkPlatformPath=`getSdkProperty iphoneos PlatformPath`
-macosSdkPlatformPath=`getSdkProperty macosx PlatformPath`
+		echo "Find iOS SDK platform path: ${iosSdkPlatformPath}"
+		echo "Find macOS SDK platform path: ${macosSdkPlatformPath}"
 
-specificationFile=$(cd $iosSdkPlatformPath/../../.. && pwd)/PlugIns/IDEiOSSupportCore.ideplugin/Contents/Resources/Embedded-Device.xcspec
+		specificationFile=$(cd $iosSdkPlatformPath/../../.. && pwd)/PlugIns/IDEiOSSupportCore.ideplugin/Contents/Resources/Embedded-Device.xcspec
 
-requireFile "$specificationFile" false
+		if versionGe ${versionNumber} "13.0"; then
+			macosxSDKSpecificationsPath=$(cd $iosSdkPlatformPath/../../.. && pwd)/PlugIns
+			packageTypesForMacOSXPath="$macosxSDKSpecificationsPath/XCBSpecifications.ideplugin/Contents/Resources/Darwin Package Types.xcspec"
+			productTypesForMacOSXPath="$macosxSDKSpecificationsPath/XCBSpecifications.ideplugin/Contents/Resources/Darwin Product Types.xcspec"
+		elif versionGe ${versionNumber} "12.0"; then
+			specificationFile=$(cd $iosSdkPlatformPath/../../.. && pwd)/PlugIns/IDEiOSSupportCore.ideplugin/Contents/Resources/Embedded-Device.xcspec
+			macosxSDKSpecificationsPath=$macosSdkPlatformPath/Developer/Library/Xcode/PrivatePlugIns
+			packageTypesForMacOSXPath="$macosxSDKSpecificationsPath/IDEOSXSupportCore.ideplugin/Contents/Resources/MacOSX Package Types.xcspec"
+			productTypesForMacOSXPath="$macosxSDKSpecificationsPath/IDEOSXSupportCore.ideplugin/Contents/Resources/MacOSX Product Types.xcspec"
+		else
+			specificationFile=$(cd $iosSdkPlatformPath/../../.. && pwd)/PlugIns/IDEiOSSupportCore.ideplugin/Contents/Resources/Embedded-Device.xcspec
+			macosxSDKSpecificationsPath=$macosSdkPlatformPath/Developer/Library/Xcode/Specifications
+			packageTypesForMacOSXPath="$macosxSDKSpecificationsPath/MacOSX Package Types.xcspec"
+			productTypesForMacOSXPath="$macosxSDKSpecificationsPath/MacOSX Product Types.xcspec"
+		fi
 
-#backup
-requireBackup "$specificationFile"
+		requireFile "$specificationFile" false
 
-hasPackageTypeForCommandLineTool=`doesFileContain "$specificationFile" 'com.apple.package-type.mach-o-executable'`
-hasProductTypeForCommandLineTool=`doesFileContain "$specificationFile" 'com.apple.product-type.tool'`
+		#backup
+		requireBackup "$specificationFile"
 
-macosxSDKSpecificationsPath=$macosSdkPlatformPath/Developer/Library/Xcode/Specifications
-packageTypesForMacOSXPath="$macosxSDKSpecificationsPath/MacOSX Package Types.xcspec"
-productTypesForMacOSXPath="$macosxSDKSpecificationsPath/MacOSX Product Types.xcspec"
+		hasPackageTypeForCommandLineTool=$(doesFileContain "$specificationFile" 'com.apple.package-type.mach-o-executable')
+		hasProductTypeForCommandLineTool=$(doesFileContain "$specificationFile" 'com.apple.product-type.tool')
 
-requireFile "$packageTypesForMacOSXPath" false
-requireFile "$productTypesForMacOSXPath" false
+		requireFile "$packageTypesForMacOSXPath" false
+		requireFile "$productTypesForMacOSXPath" false
 
-if [[ $hasPackageTypeForCommandLineTool != "true" ]]; then
-	machoDict=`readXcodeSpecificationById "$packageTypesForMacOSXPath" "com.apple.package-type.mach-o-executable"`
-	writeDictToSpecification "$specificationFile" "$machoDict"
+		if [[ $hasPackageTypeForCommandLineTool != "true" ]]; then
+			machoDict=$(readXcodeSpecificationById "$packageTypesForMacOSXPath" "com.apple.package-type.mach-o-executable")
+			writeDictToSpecification "$specificationFile" "$machoDict"
+		fi
+
+		if [[ $hasProductTypeForCommandLineTool != "true" ]]; then
+			toolDict=$(readXcodeSpecificationById "$productTypesForMacOSXPath" "com.apple.product-type.tool")
+			writeDictToSpecification "$specificationFile" "$toolDict"
+		fi
+
+		echo "Done"
+
+		exit 0
+	fi
+else
+	panic 1 "Failed to get xcode vsrsion"
 fi
-
-if [[ $hasProductTypeForCommandLineTool != "true" ]]; then
-	toolDict=`readXcodeSpecificationById "$productTypesForMacOSXPath" "com.apple.product-type.tool"`
-	writeDictToSpecification "$specificationFile" "$toolDict"
-fi
-
-exit 0

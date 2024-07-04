@@ -21,8 +21,6 @@
 			<dict>
 				<key>LD_RUNPATH_SEARCH_PATHS</key>
 				<string>$(inherited) @executable_path/Frameworks</string>
-				<key>OTHER_LDFLAGS</key>
-				<string>$(inherited)  -weak_library /usr/lib/libc++.dylib -weak_library /usr/lib/libstdc++.dylib -weak_library $(MonkeyDevPath)/Frameworks/libsubstrate.dylib</string>
 				<key>ENABLE_BITCODE</key>
 				<string>NO</string>
 				<key>PRODUCT_NAME</key>
@@ -71,6 +69,8 @@
 	<dict>
 		<key>SharedSettings</key>
 		<dict>
+			<key>ENABLE_USER_SCRIPT_SANDBOXING</key>
+			<string>NO</string>
 			<key>MonkeyDevTheosPath</key>
 			<string>/opt/theos</string>
 			<key>TARGETED_DEVICE_FAMILY</key>
@@ -94,7 +94,7 @@
 			<key>MonkeyDevPath</key>
 			<string>/opt/MonkeyDev</string>
 			<key>IPHONEOS_DEPLOYMENT_TARGET</key>
-			<string>8.0</string>
+			<string>12.0</string>
 			<key>FRAMEWORK_SEARCH_PATHS</key>
 			<string>$(inherited) $(MonkeyDevPath)/Frameworks/** $(MonkeyDevPath)/Librarys/** $(MonkeyDevTheosPath)/vendor/lib</string>
 		</dict>
@@ -105,8 +105,10 @@
 			<key>Debug</key>
 			<dict>
 				<key>OTHER_LDFLAGS</key>
-				<string>$(inherited)  -weak_library /usr/lib/libc++.dylib -weak_library /usr/lib/libstdc++.dylib -weak_library $(MonkeyDevPath)/Frameworks/libsubstrate.dylib -lcycript -framework RevealServer</string>
+				<string></string>
 				<key>VALIDATE_PRODUCT</key>
+				<string>NO</string>
+				<key>ENABLE_USER_SCRIPT_SANDBOXING</key>
 				<string>NO</string>
 				<key>GCC_OPTIMIZATION_LEVEL</key>
 				<string>0</string>
@@ -125,6 +127,8 @@
 				<string>YES</string>
 				<key>VALIDATE_PRODUCT</key>
 				<string>YES</string>
+				<key>ENABLE_USER_SCRIPT_SANDBOXING</key>
+				<string>NO</string>
 			</dict>
 		</dict>
 	</dict>
@@ -217,12 +221,8 @@
 	</array>
 	<key>Nodes</key>
 	<array>
-		<string>Logos/___PACKAGENAMEASIDENTIFIER___.xm</string>
-		<string>Logos/___PACKAGENAMEASIDENTIFIER___.mm</string>
 		<string>Config/MDConfigManager.h</string>
 		<string>Config/MDConfigManager.m</string>
-		<string>Config/MDCycriptManager.h</string>
-		<string>Config/MDCycriptManager.m</string>
 		<string>Config/MDMethodTrace.h</string>
 		<string>Config/MDMethodTrace.m</string>
 		<string>Trace/a1a2-selectortramps-arm.s</string>
@@ -244,29 +244,9 @@
 		<string>AntiAntiDebug/AntiAntiDebug.m</string>
 		<string>fishhook/fishhook.c</string>
 		<string>fishhook/fishhook.h</string>
-		<string>___PACKAGENAMEASIDENTIFIER___.h</string>
-		<string>___PACKAGENAMEASIDENTIFIER___.m</string>
 	</array>
 	<key>Definitions</key>
 	<dict>
-		<key>Logos/___PACKAGENAMEASIDENTIFIER___.xm</key>
-		<dict>
-			<key>Group</key>
-			<array>
-				<string>Logos</string>
-			</array>
-			<key>Path</key>
-			<string>Logos/___PACKAGENAMEASIDENTIFIER___.xm</string>
-		</dict>
-		<key>Logos/___PACKAGENAMEASIDENTIFIER___.mm</key>
-		<dict>
-			<key>Group</key>
-			<array>
-				<string>Logos</string>
-			</array>
-			<key>Path</key>
-			<string>Logos/___PACKAGENAMEASIDENTIFIER___.mm</string>
-		</dict>
 		<key>Config/MDConfigManager.h</key>
 		<dict>
 			<key>Group</key>
@@ -284,24 +264,6 @@
 			</array>
 			<key>Path</key>
 			<string>Config/MDConfigManager.m</string>
-		</dict>
-		<key>Config/MDCycriptManager.h</key>
-		<dict>
-			<key>Group</key>
-			<array>
-				<string>Config</string>
-			</array>
-			<key>Path</key>
-			<string>Config/MDCycriptManager.h</string>
-		</dict>
-		<key>Config/MDCycriptManager.m</key>
-		<dict>
-			<key>Group</key>
-			<array>
-				<string>Config</string>
-			</array>
-			<key>Path</key>
-			<string>Config/MDCycriptManager.m</string>
 		</dict>
 		<key>Config/MDMethodTrace.h</key>
 		<dict>
@@ -463,8 +425,6 @@
 // Prefix header for all source files of the &apos;___PACKAGENAME___&apos; target in the &apos;___PACKAGENAME___&apos; project
 //
 </string>
-			<key>Group</key>
-			<string>Supporting Files</string>
 			<key>TargetIndices</key>
 			<array/>
 		</dict>
@@ -499,16 +459,6 @@
 			<array>
 				<string>fishhook</string>
 			</array>
-		</dict>
-		<key>___PACKAGENAMEASIDENTIFIER___.h</key>
-		<dict>
-			<key>Path</key>
-			<string>___PACKAGENAMEASIDENTIFIER___.h</string>
-		</dict>
-		<key>___PACKAGENAMEASIDENTIFIER___.m</key>
-		<dict>
-			<key>Path</key>
-			<string>___PACKAGENAMEASIDENTIFIER___.m</string>
 		</dict>
 	</dict>
 </dict>
